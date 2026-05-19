@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <h1 class="app-title">Tasks</h1>
+    <div class="badges" id="badges">
+      <span class="badge badge-info"><span class="badge-label">今日対応</span><span class="badge-count" id="count-today">0</span></span>
+      <span class="badge badge-warning"><span class="badge-label">要注意</span><span class="badge-count" id="count-warning">0</span></span>
+      <span class="badge badge-danger"><span class="badge-label">遅延</span><span class="badge-count" id="count-delayed">0</span></span>
+    </div>
+    <div class="header-actions">
+      <div class="view-toggle">
+        <button class="view-btn active" data-view="kanban">カンバン</button>
+        <button class="view-btn" data-view="calendar">カレンダー</button>
+      </div>
+      <button class="btn-primary" id="btn-new">+ 新規</button>
+    </div>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <section id="view-kanban" class="view active">
+    <div class="kanban-board" id="kanban-board"></div>
+  </section>
+
+  <section id="view-calendar" class="view">
+    <div class="calendar-header">
+      <button class="cal-nav" id="cal-prev">‹</button>
+      <h2 class="cal-title" id="cal-title"></h2>
+      <button class="cal-nav" id="cal-next">›</button>
+      <button class="cal-today" id="cal-today">今日</button>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+  </section>
+
+</main>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">タスク</h2>
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label for="f-title">タイトル</label>
+        <input type="text" id="f-title" placeholder="タスク名を入力">
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="f-category">カテゴリ</label>
+          <select id="f-category">
+            <option value="仕事">仕事</option>
+            <option value="診断士">診断士</option>
+            <option value="中央大">中央大</option>
+            <option value="個人">個人</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="f-priority">優先度</label>
+          <select id="f-priority">
+            <option value="高">高</option>
+            <option value="中" selected>中</option>
+            <option value="低">低</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="f-start">開始日</label>
+          <input type="date" id="f-start">
+        </div>
+        <div class="form-row">
+          <label for="f-due">期限</label>
+          <input type="date" id="f-due">
+        </div>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-row">
+          <label for="f-hours">想定工数 (h)</label>
+          <input type="number" id="f-hours" min="0" step="0.5" placeholder="任意">
+        </div>
+        <div class="form-row">
+          <label for="f-status">ステータス</label>
+          <select id="f-status">
+            <option value="未着手">未着手</option>
+            <option value="着手">着手</option>
+            <option value="進行中">進行中</option>
+            <option value="仕上げ">仕上げ</option>
+            <option value="完了">完了</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="f-memo">メモ</label>
+        <textarea id="f-memo" rows="4" placeholder="自由記述"></textarea>
+      </div>
+      <div class="recovery-box" id="recovery-box" style="display:none">
+        <div class="recovery-title">進捗回復のアイデア</div>
+        <ul class="recovery-list" id="recovery-list"></ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="btn-delete" style="display:none">削除</button>
+      <div class="modal-footer-right">
+        <button class="btn-secondary" id="btn-cancel">キャンセル</button>
+        <button class="btn-primary" id="btn-save">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
