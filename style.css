@@ -530,6 +530,38 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   font-size: 13px;
 }
 
+
+/* ドラッグ&ドロップ */
+.task-card {
+  position: relative;
+}
+
+.drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 14px;
+  color: var(--text-faint);
+  cursor: grab;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s;
+  user-select: none;
+}
+
+.task-card:hover .drag-handle { opacity: 1; }
+
+.task-card.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.kanban-column.drag-over {
+  background: var(--info-bg);
+  outline: 2px dashed var(--info);
+  outline-offset: -2px;
+}
+
 @media (max-width: 900px) {
   .kanban-board { grid-template-columns: 1fr; }
   .header-inner { flex-wrap: wrap; gap: 12px; }
