@@ -1,7 +1,7 @@
 // ============================================================
 // 設定: GAS デプロイ後の URL をここに貼る
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbxyCEK1XrJRXCl8lrCUbHMAxBMwzAjzXZuaAQdL5QZKi4FTgkd7uvpr7cfnYiZByh_Geg/exec';
+const API_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
 
 // ============================================================
 // 定数
@@ -140,6 +140,10 @@ function renderBadges() {
 // ============================================================
 // カンバンビュー
 // ============================================================
+
+// D&D 状態管理
+let dragSrcId = null;
+
 function renderKanban() {
   const board = document.getElementById('kanban-board');
   board.innerHTML = '';
@@ -154,12 +158,33 @@ function renderKanban() {
 
     const col = document.createElement('div');
     col.className = 'kanban-column';
+    col.dataset.status = status;
     col.innerHTML = `
       <div class="col-header">
         <span class="col-title">${status}</span>
         <span class="col-count">${colTasks.length}</span>
       </div>
     `;
+
+    // ドロップゾーンのイベント
+    col.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', (e) => {
+      // 子要素への移動では外れないようにする
+      if (!col.contains(e.relatedTarget)) {
+        col.classList.remove('drag-over');
+      }
+    });
+    col.addEventListener('drop', (e) => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const newStatus = col.dataset.status;
+      if (dragSrcId && newStatus) {
+        dropTask(dragSrcId, newStatus);
+      }
+    });
 
     colTasks.forEach(task => col.appendChild(renderCard(task)));
     board.appendChild(col);
@@ -170,6 +195,8 @@ function renderCard(task) {
   const { state } = evaluateTask(task);
   const card = document.createElement('div');
   card.className = 'task-card';
+  card.draggable = true;
+  card.dataset.id = task.id;
   if (state === 'warning') card.classList.add('warning');
   if (state === 'delayed') card.classList.add('delayed');
   if (task.status === '完了') card.classList.add('done');
@@ -177,6 +204,7 @@ function renderCard(task) {
   const dueLabel = formatDueLabel(task, state);
 
   card.innerHTML = `
+    <div class="drag-handle" title="ドラッグして移動" aria-hidden="true">⠿</div>
     <div class="task-title">${escapeHtml(task.title)}</div>
     <div class="task-meta">
       <span class="cat-tag cat-${task.category}">${task.category}</span>
@@ -185,8 +213,59 @@ function renderCard(task) {
     </div>
   `;
 
-  card.addEventListener('click', () => openEditModal(task));
+  // ドラッグ開始: カードをつかんだ瞬間
+  card.addEventListener('dragstart', (e) => {
+    dragSrcId = task.id;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    // Firefox 対応: dataTransfer に何か入れないと動かない
+    e.dataTransfer.setData('text/plain', task.id);
+  });
+
+  card.addEventListener('dragend', () => {
+    dragSrcId = null;
+    card.classList.remove('dragging');
+    // 全列のハイライトを確実にクリア
+    document.querySelectorAll('.kanban-column').forEach(c => c.classList.remove('drag-over'));
+  });
+
+  // クリックとドラッグを区別: mousedown 座標と mouseup 座標のズレで判定
+  let mouseDownX = 0, mouseDownY = 0;
+  card.addEventListener('mousedown', (e) => {
+    mouseDownX = e.clientX;
+    mouseDownY = e.clientY;
+  });
+  card.addEventListener('click', (e) => {
+    const dx = Math.abs(e.clientX - mouseDownX);
+    const dy = Math.abs(e.clientY - mouseDownY);
+    if (dx < 5 && dy < 5) openEditModal(task);
+  });
+
   return card;
+}
+
+// ドロップ後の処理: 楽観的UI更新 → API保存
+async function dropTask(id, newStatus) {
+  const task = tasks.find(t => t.id === id);
+  if (!task || task.status === newStatus) return;
+
+  const oldStatus = task.status;
+
+  // 楽観的更新: APIを待たずに即座に画面を更新
+  task.status = newStatus;
+  renderKanban();
+  renderBadges();
+  toast(`「${task.title}」→ ${newStatus}`);
+
+  try {
+    await api('update', { id, data: { status: newStatus } });
+  } catch (err) {
+    // 失敗したら元に戻す
+    task.status = oldStatus;
+    renderKanban();
+    renderBadges();
+    toast('更新失敗: ' + err.message);
+  }
 }
 
 function formatDueLabel(task, state) {
