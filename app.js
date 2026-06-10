@@ -1,7 +1,7 @@
 // ============================================================
 // 設定: GAS デプロイ後の URL をここに貼る
 // ============================================================
-const API_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxyCEK1XrJRXCl8lrCUbHMAxBMwzAjzXZuaAQdL5QZKi4FTgkd7uvpr7cfnYiZByh_Geg/exec';
 
 // ============================================================
 // 定数
